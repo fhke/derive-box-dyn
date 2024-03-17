@@ -51,15 +51,14 @@ fn get_target_traits(ast: ItemStruct) -> Vec<String> {
             _ => None,
         })
         .filter(|a| a.0 == "box_dyn_traits")
-        .map(|a| {
+        .flat_map(|a| {
             a.1.tokens
                 .clone()
                 .into_iter()
                 .map(|t| t.to_string())
                 .filter(|t| t != ",")
         })
-        .flatten()
-        .collect::<Vec<String>>()
+        .collect()
 }
 
 // template_impl templates a single implementation of std::convert::Into.
