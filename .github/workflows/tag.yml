@@ -1,4 +1,3 @@
-name: Tag repository
 on:
   workflow_call:
     inputs:
