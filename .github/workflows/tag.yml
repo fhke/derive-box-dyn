@@ -1,0 +1,36 @@
+on:
+  workflow_call:
+    inputs:
+      push-tag:
+        required: true
+        type: boolean
+
+jobs:
+  tag:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - name: Get tag
+      run: |
+        CRATE_VERSION="$(grep '^version =' Cargo.toml | sed -E 's/^.*([0-9]+\.[0-9]+\.[0-9]+)"$/\1/g' | head -n 1)"
+        if [ -z "${CRATE_VERSION}" ]; then
+          echo "Error: could not identify crate version" >&2
+          exit 1
+        fi
+        TAG_NAME="v${CRATE_VERSION}"
+        echo "Tag name is ${TAG_NAME}" >&2
+        echo "TAG_NAME=${TAG_NAME}" >> "${GITHUB_ENV}"
+    - name: Validate tag
+      run: |
+        git fetch --tags
+        if git tag --list | grep -qF "${TAG_NAME}"; then
+          echo "Tag ${TAG_NAME} is already in use" >&2
+          exit 1
+        else
+          echo "Tag ${TAG_NAME} is not in use" >&2
+        fi
+    - name: Publish tag
+      if: inputs.push-tag
+      run: |
+        echo "Publishing tag ${TAG_NAME}" >&2
+        git push origin "refs/tags/${TAG_NAME}"
