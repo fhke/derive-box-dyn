@@ -1,0 +1,35 @@
+name: Release
+
+on:
+  push:
+    branches: [ "main" ]
+
+permissions:
+  contents: write
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - name: Create tag
+      run: |
+        CRATE_VERSION="$(grep '^version =' Cargo.toml | sed -E 's/^.*([0-9]+\.[0-9]+\.[0-9]+)"$/\1/g' | head -n 1)"
+        if [ -z "${CRATE_VERSION}" ]; then
+          echo "Error: could not identify crate version" >&2
+          exit 1
+        fi
+        TAG_NAME="v${CRATE_VERSION}"
+        echo "Tagging with ${TAG_NAME}" >&2
+        git tag "${TAG_NAME}"
+        git push origin "refs/tags/${TAG_NAME}"
+    - uses: actions-rs/toolchain@v1
+      with:
+          toolchain: stable
+          override: true
+    - uses: katyo/publish-crates@v2
+      with:
+          registry-token: ${{ secrets.CARGO_REGISTRY_TOKEN }}
