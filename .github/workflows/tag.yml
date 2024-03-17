@@ -33,4 +33,5 @@ jobs:
       if: inputs.push-tag
       run: |
         echo "Publishing tag ${TAG_NAME}" >&2
+        git tag "${TAG_NAME}"
         git push origin "refs/tags/${TAG_NAME}"
